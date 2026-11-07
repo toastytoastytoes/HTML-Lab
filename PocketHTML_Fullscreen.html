@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090b12">
+<title>PocketHTML</title>
+<style>
+:root{color-scheme:dark;--bg:#090b12;--panel:#121621;--panel2:#191f2d;--line:#2a3244;--text:#edf2ff;--muted:#9aa6bd;--accent:#8b5cf6;--accent2:#22d3ee}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#15172a 0,#090b12 55%);color:var(--text);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+header{padding:calc(14px + env(safe-area-inset-top)) 16px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);background:#0b0e16e8;position:sticky;top:0;z-index:5;backdrop-filter:blur(16px)}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-weight:900;color:#fff;font-size:20px;box-shadow:0 5px 25px #8b5cf633}.brand h1{margin:0;font-size:19px;letter-spacing:-.5px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:-2px}
+main{max-width:900px;margin:0 auto;padding:16px;display:grid;gap:14px}.card{background:linear-gradient(180deg,#151a26,#111520);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 10px 35px #0002}.intro h2{margin:0 0 6px;font-size:22px}.intro p{margin:0;color:var(--muted)}
+.tabs{display:flex;gap:8px;margin:14px 0 0}.tab{flex:1;padding:10px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-weight:700}.tab.active{background:#292143;border-color:#7553d6;color:#fff}
+label{display:block;font-weight:700;margin:12px 0 7px}input[type=file],select,textarea{width:100%;background:#0a0d14;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font:inherit}input[type=file]{padding:10px}textarea{min-height:220px;resize:vertical;font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
+.row{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.btn{border:1px solid var(--line);background:#202738;color:var(--text);padding:11px 14px;border-radius:11px;font-weight:750;cursor:pointer;flex:1;min-width:110px}.btn.primary{background:linear-gradient(135deg,#7c3aed,#5b4de2);border-color:#8b5cf6}.btn.cyan{background:#12313a;border-color:#1c7180}.btn:active{transform:scale(.98)}.hint{font-size:12px;color:var(--muted);margin-top:8px}.hidden{display:none!important}
+#status{font-size:12px;color:var(--muted);margin-top:8px;overflow-wrap:anywhere}
+.preview-card{padding:0;overflow:hidden}.preview-head{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#171d2a;border-bottom:1px solid var(--line)}.preview-head strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.preview-head .btn{flex:0 0 auto;min-width:auto;padding:8px 10px;font-size:12px}#preview{width:100%;height:65vh;min-height:350px;border:0;background:white;display:block}#preview:fullscreen{height:100vh;width:100vw}
+footer{text-align:center;color:#77839a;font-size:11px;padding:4px 16px 24px}
+@media(min-width:700px){main{padding:24px}.card{padding:20px}#preview{height:72vh}}
+
+#runner{position:fixed;inset:0;z-index:100;background:#000;display:none}
+#runner.active{display:block}
+#runner iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+#exitRunner{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;z-index:101;
+background:#111c;color:#fff;border:1px solid #ffffff55;border-radius:999px;padding:9px 13px;
+font:700 13px system-ui;backdrop-filter:blur(12px);opacity:.45}
+#exitRunner:active,#exitRunner:focus{opacity:1}
+body.running{overflow:hidden}
+</style>
+</head>
+<body>
+<div id="runner" aria-label="Fullscreen app runner">
+  <iframe id="runFrame" title="Running HTML app" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock" allow="fullscreen; gamepad"></iframe>
+  <button id="exitRunner">✕ Exit</button>
+</div>
+<header><div class="brand"><div class="logo">&lt;/&gt;</div><div><h1>PocketHTML</h1><small>Run your little web projects</small></div></div><button class="btn" style="flex:0 0 auto;min-width:auto" id="clearBtn">Reset</button></header>
+<main>
+<section class="card intro"><h2>Your pocket-sized HTML lab ✨</h2><p>Open an HTML file, paste code, or load a ZIP project. Everything runs in your browser.</p>
+<div class="tabs"><button class="tab active" data-tab="file">Open file</button><button class="tab" data-tab="paste">Paste code</button></div>
+</section>
+<section class="card" id="filePanel">
+<label for="htmlFile">Single HTML file</label><input id="htmlFile" type="file" accept=".html,.htm,text/html">
+<div class="row"><button class="btn primary" id="runFile">▶ Run HTML</button></div>
+<label for="zipFile">ZIP project (HTML + CSS + JS + images)</label><input id="zipFile" type="file" accept=".zip,application/zip">
+<label for="entryFile">Project entry point</label><select id="entryFile" disabled><option>Choose a ZIP first…</option></select>
+<div class="row"><button class="btn cyan" id="runZip" disabled>▶ Run ZIP project</button></div>
+<div class="hint">ZIP support uses JSZip from a CDN. The archive is processed locally in your browser and isn't uploaded.</div>
+</section>
+<section class="card hidden" id="pastePanel">
+<label for="code">HTML code</label><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="<!doctype html>&#10;<html>…"></textarea>
+<div class="row"><button class="btn primary" id="runCode">▶ Run code</button><button class="btn" id="sample">Load sample</button></div>
+</section>
+<section class="card preview-card" id="previewCard">
+<div class="preview-head"><strong id="previewTitle">Preview · waiting for a project</strong><button class="btn" id="fullscreenBtn">⛶ Fullscreen</button></div>
+<iframe id="preview" title="HTML preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads" allow="fullscreen"></iframe>
+</section>
+<div id="status" role="status">Ready. Pick a file to begin.</div>
+</main>
+<footer>PocketHTML · Files stay on your device unless your code itself sends them somewhere.</footer>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let zip=null, zipFiles=[], currentName="Preview";
+function status(msg){$("status").textContent=msg}
+function setTitle(name){currentName=name;$("previewTitle").textContent="Preview · "+name}
+function runHtml(text,name){
+ $("runFrame").srcdoc=text;
+ setTitle(name);
+ $("runner").classList.add("active");
+ document.body.classList.add("running");
+ status("Running fullscreen: "+name);
+}
+function exitRunner(){
+ $("runner").classList.remove("active");
+ document.body.classList.remove("running");
+ $("runFrame").srcdoc="";
+ status("Returned to PocketHTML.");
+}
+$("exitRunner").addEventListener("click",exitRunner);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("runner").classList.contains("active"))exitRunner()});
+$("runFile").addEventListener("click",async()=>{
+ const f=$("htmlFile").files[0];if(!f){status("Choose an HTML file first.");return}
+ runHtml(await f.text(),f.name)
+});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
+ document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));
+ $("filePanel").classList.toggle("hidden",b.dataset.tab!=="file");$("pastePanel").classList.toggle("hidden",b.dataset.tab!=="paste")
+}));
+$("runCode").addEventListener("click",()=>{const s=$("code").value;if(!s.trim()){status("Paste some HTML first.");return}runHtml(s,"Pasted HTML")});
+$("sample").addEventListener("click",()=>{$("code").value='<!doctype html>\n<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hi!</title><style>body{font:system-ui;text-align:center;padding:2rem;background:#101827;color:white}button{padding:12px 20px;border-radius:12px;border:0;background:#8b5cf6;color:white}
+#runner{position:fixed;inset:0;z-index:100;background:#000;display:none}
+#runner.active{display:block}
+#runner iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+#exitRunner{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;z-index:101;
+background:#111c;color:#fff;border:1px solid #ffffff55;border-radius:999px;padding:9px 13px;
+font:700 13px system-ui;backdrop-filter:blur(12px);opacity:.45}
+#exitRunner:active,#exitRunner:focus{opacity:1}
+body.running{overflow:hidden}
+</style></head><body>
+<div id="runner" aria-label="Fullscreen app runner">
+  <iframe id="runFrame" title="Running HTML app" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock" allow="fullscreen; gamepad"></iframe>
+  <button id="exitRunner">✕ Exit</button>
+</div><h1>Hello from PocketHTML 👋</h1><p>Your HTML is running on your phone.</p><button onclick="document.querySelector(\'p\').textContent=\'It works! 🎉\'">Tap me</button></body></html>'});
+$("zipFile").addEventListener("change",async()=>{
+ const f=$("zipFile").files[0];zip=null;zipFiles=[];$("entryFile").innerHTML="";$("runZip").disabled=true;
+ if(!f)return;if(!window.JSZip){status("Could not load ZIP support. Check your internet connection and reload.");return}
+ try{zip=await JSZip.loadAsync(f);zipFiles=Object.values(zip.files).filter(x=>!x.dir&&/\.(html?|HTML?)$/.test(x.name)).map(x=>x.name).sort();
+  if(!zipFiles.length){status("No .html or .htm files found in this ZIP.");return}
+  zipFiles.forEach(name=>{const o=document.createElement("option");o.value=name;o.textContent=name;$("entryFile").appendChild(o)});
+  $("entryFile").disabled=false;$("runZip").disabled=false;status(`ZIP loaded: ${zipFiles.length} HTML file(s) found. Choose the entry point.`);
+ }catch(e){status("Could not read ZIP: "+e.message)}
+});
+function normalizePath(base,path){if(!path||path.startsWith("#")||/^(data:|blob:|https?:|\/\/|mailto:|javascript:)/i.test(path))return null;
+ try{path=decodeURIComponent(path.split("?")[0].split("#")[0])}catch(e){}
+ const parts=(base?base.split("/").slice(0,-1):[]).concat(path.split("/"));const out=[];
+ for(const p of parts){if(!p||p===".")continue;if(p==="..")out.pop();else out.push(p)}
+ return out.join("/")
+}
+$("runZip").addEventListener("click",async()=>{
+ if(!zip)return;const entry=$("entryFile").value;if(!entry)return;
+ status("Preparing ZIP project…");
+ try{
+  const blobs=new Map(),files=Object.values(zip.files).filter(f=>!f.dir);
+  for(const f of files){const data=await f.async("blob");const ext=f.name.split(".").pop().toLowerCase();const mime=({html:"text/html",htm:"text/html",css:"text/css",js:"text/javascript",mjs:"text/javascript",json:"application/json",svg:"image/svg+xml",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",ico:"image/x-icon",woff:"font/woff",woff2:"font/woff2",ttf:"font/ttf",mp3:"audio/mpeg",mp4:"video/mp4"})[ext]||"application/octet-stream";blobs.set(f.name,URL.createObjectURL(new Blob([data],{type:mime})))}
+  const replacePath=(path,from)=>{const p=normalizePath(from,path);return p&&blobs.has(p)?blobs.get(p):path};
+  // Rewrite local asset references in HTML.
+  let html=await zip.file(entry).async("string");
+  html=html.replace(/(\b(?:src|href|poster|data-src|action)=)(["'])(.*?)\2/gi,(m,a,q,v)=>{
+   if(/^(#|data:|blob:|https?:|\/\/|mailto:|javascript:)/i.test(v))return m;
+   return a+q+replacePath(v,entry)+q
+  });
+  // Rewrite inline styles and linked CSS files.
+  html=html.replace(/<link\b([^>]*\bhref=["']([^"']+\.css(?:\?[^"']*)?)["'][^>]*)>/gi,(m,attrs,path)=>{
+   const p=normalizePath(entry,path);if(!p||!zip.file(p))return m;
+   return m.replace(path,blobs.get(p)||path)
+  });
+  html=html.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi,(m,css)=>m.replace(css,rewriteCss(css,entry,replacePath)));
+  // CSS in the ZIP, including stylesheets referenced by HTML.
+  for(const [name,url] of blobs){if(!/\.css$/i.test(name))continue;const f=zip.file(name);if(!f)continue;let css=await f.async("string");css=rewriteCss(css,name,replacePath);const newUrl=URL.createObjectURL(new Blob([css],{type:"text/css"}));blobs.set(name,newUrl)}
+  // Replace local references in HTML again after stylesheet URLs have been generated.
+  html=html.replace(/(\b(?:src|href|poster|data-src|action)=)(["'])(.*?)\2/gi,(m,a,q,v)=>{if(/^(#|data:|blob:|https?:|\/\/|mailto:|javascript:)/i.test(v))return m;return a+q+replacePath(v,entry)+q});
+  runHtml(html,entry);status("ZIP project running. Note: complex JS module imports and fetch() paths may need adjustments.");
+ }catch(e){status("ZIP error: "+e.message)}
+});
+function rewriteCss(css,from,replacePath){return css.replace(/url\((\s*)(["']?)([^)"']+)\2(\s*)\)/gi,(m,space,q,v,tail)=>{const n=replacePath(v.trim(),from);return n?"url("+space+q+n+q+tail+")":m})}
+$("fullscreenBtn").addEventListener("click",async()=>{const el=$("runner");try{if(el.requestFullscreen)await el.requestFullscreen();else status("Fullscreen isn't supported in this browser. Try opening the preview in a new tab.")}catch(e){status("Fullscreen unavailable: "+e.message)}});
+$("clearBtn").addEventListener("click",()=>{if(!confirm("Reset PocketHTML and clear the current preview?"))return;$("htmlFile").value="";$("zipFile").value="";$("entryFile").innerHTML='<option>Choose a ZIP first…</option>';$("entryFile").disabled=true;$("runZip").disabled=true;$("code").value="";zip=null;$("preview").srcdoc="";setTitle("waiting for a project");status("Reset complete.")});
+</script>
+</body></html>
